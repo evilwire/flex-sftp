@@ -1,0 +1,9 @@
+version: "3.7"
+
+services:
+  flex-sftp:
+    image: evilwire/flex-sftp:latest
+    ports:
+      - 2022:2022
+    volumes:
+      - ${PWD}/keys:/usr/keys
