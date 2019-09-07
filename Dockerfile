@@ -11,10 +11,9 @@ ADD go.mod go.sum ./
 RUN go mod download
 
 ADD . ./
+ENV CGO_ENABLED 0
 RUN go get && \
-    go build -a \
-             -tags netgo \
-             -ldflags '-w' \
+    go build -ldflags '-w' \
              -o $GOPATH/bin/flex-sftp
 
 FROM alpine:3.10

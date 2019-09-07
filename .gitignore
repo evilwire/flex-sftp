@@ -13,3 +13,6 @@
 
 # IntelliJ file
 .idea/
+
+# Gradle files
+.gradle/

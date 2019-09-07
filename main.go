@@ -7,7 +7,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"os"
+
+	"github.com/golang/glog"
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -15,28 +16,14 @@ import (
 
 // Based on example server code from golang.org/x/crypto/ssh and server_standalone
 func main() {
-
-	var (
-		readOnly    bool
-		debugStderr bool
-	)
-
-	flag.BoolVar(&readOnly, "R", false, "read-only server")
-	flag.BoolVar(&debugStderr, "e", false, "debug to stderr")
 	flag.Parse()
-
-	debugStream := ioutil.Discard
-	if debugStderr {
-		debugStream = os.Stderr
-	}
-
 	// An SSH server is represented by a ServerConfig, which holds
 	// certificate details and handles authentication of ServerConns.
 	config := &ssh.ServerConfig{
 		PasswordCallback: func(c ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
 			// Should use constant-time compare (or better, salt+hash) in
 			// a production setting.
-			fmt.Fprintf(debugStream, "Login: %s\n", c.User())
+			glog.Infof("Login: %s\n", c.User())
 			if c.User() == "testuser" && string(pass) == "tiger" {
 				return nil, nil
 			}
@@ -46,14 +33,13 @@ func main() {
 
 	privateBytes, err := ioutil.ReadFile("/usr/keys/id_rsa")
 	if err != nil {
-		log.Fatal("Failed to load private key", err)
+		glog.Fatalf("Failed to load private key", err)
 	}
 
 	private, err := ssh.ParsePrivateKey(privateBytes)
 	if err != nil {
 		log.Fatal("Failed to parse private key", err)
 	}
-
 	config.AddHostKey(private)
 
 	// Once a ServerConfig has been configured, connections can be
@@ -74,8 +60,8 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to handshake", err)
 	}
-	log.Println("login detected:", sconn.User())
-	fmt.Fprintf(debugStream, "SSH server established\n")
+	glog.Infof("login detected:", sconn.User())
+	glog.Info("SSH server established\n")
 
 	// The incoming Request channel must be serviced.
 	go ssh.DiscardRequests(reqs)
@@ -85,33 +71,33 @@ func main() {
 		// Channels have a type, depending on the application level
 		// protocol intended. In the case of an SFTP session, this is "subsystem"
 		// with a payload string of "<length=4>sftp"
-		fmt.Fprintf(debugStream, "Incoming channel: %s\n", newChannel.ChannelType())
+		glog.Infof("Incoming channel: %s\n", newChannel.ChannelType())
 		if newChannel.ChannelType() != "session" {
 			newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
-			fmt.Fprintf(debugStream, "Unknown channel type: %s\n", newChannel.ChannelType())
+			glog.Infof("Unknown channel type: %s\n", newChannel.ChannelType())
 			continue
 		}
 		channel, requests, err := newChannel.Accept()
 		if err != nil {
 			log.Fatal("could not accept channel.", err)
 		}
-		fmt.Fprintf(debugStream, "Channel accepted\n")
+		glog.Info("Channel accepted\n")
 
 		// Sessions have out-of-band requests such as "shell",
 		// "pty-req" and "env".  Here we handle only the
 		// "subsystem" request.
 		go func(in <-chan *ssh.Request) {
 			for req := range in {
-				fmt.Fprintf(debugStream, "Request: %v\n", req.Type)
+				glog.Infof("Request: %v\n", req.Type)
 				ok := false
 				switch req.Type {
 				case "subsystem":
-					fmt.Fprintf(debugStream, "Subsystem: %s\n", req.Payload[4:])
+					glog.Infof("Subsystem: %s\n", req.Payload[4:])
 					if string(req.Payload[4:]) == "sftp" {
 						ok = true
 					}
 				}
-				fmt.Fprintf(debugStream, " - accepted: %v\n", ok)
+				glog.Infof(" - accepted: %v\n", ok)
 				req.Reply(ok, nil)
 			}
 		}(requests)
@@ -126,4 +112,3 @@ func main() {
 		}
 	}
 }
-
