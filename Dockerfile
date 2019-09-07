@@ -1,5 +1,15 @@
 FROM golang:1.12-alpine3.10 as build
 
+# the version of the docker file
+ARG VERSION
+ENV VERSION $VERSION
+
+ARG SHORTHASH
+ENV SHORTHASH $SHORTHASH
+
+ARG BUILD_TIME
+ENV BUILD_TIME $BUILD_TIME
+
 RUN apk upgrade && \
   apk update && \
   apk add --update git ca-certificates

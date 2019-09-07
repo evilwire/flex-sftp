@@ -17,11 +17,17 @@ plugins {
 }
 
 task buildImage {
+    def version = file("VERSION").text.trim()
+    def shortHash = grgit.head().abbreviatedId
+
     doLast {
         exec {
             workingDir '.'
             commandLine 'docker', 'build',
                 '--rm',
+                '--build-arg', "VERSION=${version}",
+                '--build-arg', "SHORTHASH=${shortHash}",
+                '--build-arg', "BUILD_TIME=${new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'")}",
                 '-t', "evilwire/flex-sftp:latest", '.'
         }
     }
