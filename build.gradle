@@ -33,3 +33,22 @@ task buildImage {
     }
 }
 
+task run {
+    dependsOn = ["buildImage"]
+
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'docker-compose', 'up', '-d'
+        }
+    }
+}
+
+task stop {
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'docker-compose', 'down'
+        }
+    }
+}
