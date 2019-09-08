@@ -13,7 +13,7 @@ buildscript {
 }
 
 plugins {
-    id 'distribution'
+    id 'org.ajoberstar.grgit' version '2.1.0'
 }
 
 task buildImage {
