@@ -16,7 +16,6 @@ import (
 func main() {
 	flag.Parse()
 
-	log.Print("Hello!")
 	// An SSH server is represented by a ServerConfig, which holds
 	// certificate details and handles authentication of ServerConns.
 	config := &ssh.ServerConfig{
@@ -30,6 +29,9 @@ func main() {
 			return nil, fmt.Errorf("password rejected for %q", c.User())
 		},
 	}
+
+	log.Print("Allocating a new in-memory handler")
+	root := sftp.InMemHandler()
 
 	privateBytes, err := ioutil.ReadFile("/usr/keys/id_rsa")
 	if err != nil {
@@ -104,7 +106,6 @@ func main() {
 				}
 			}(requests)
 
-			root := sftp.InMemHandler()
 			server := sftp.NewRequestServer(channel, root)
 			if err := server.Serve(); err == io.EOF {
 				server.Close()
