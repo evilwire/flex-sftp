@@ -7,3 +7,4 @@ services:
       - 2022:2022
     volumes:
       - ${PWD}/keys:/usr/keys
+    command: ["-logtostderr"]
