@@ -17,6 +17,17 @@ import (
 func main() {
 	flag.Parse()
 
+	server := SFTPServer{
+		config: Config{ListenerCount: 5},
+	}
+	server.setupEventLoop()
+	panic(server.ListenAndServe("0.0.0.0:2022"))
+
+}
+
+func oldMain() {
+	flag.Parse()
+
 	// An SSH server is represented by a ServerConfig, which holds
 	// certificate details and handles authentication of ServerConns.
 	config := &ssh.ServerConfig{
@@ -68,7 +79,7 @@ func main() {
 				if err != nil {
 					glog.Fatal("failed to handshake", err)
 				}
-				glog.Infof("login detected:", sconn.User())
+				glog.Infof("login detected: %s", sconn.User())
 				glog.Info("SSH server established\n")
 
 				// The incoming Request channel must be serviced.
