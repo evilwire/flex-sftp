@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"time"
 
@@ -19,6 +20,20 @@ type Config struct {
 type SFTPConnectionListener struct {
 	config   *ssh.ServerConfig
 	Handlers sftp.Handlers
+}
+
+func (listener *SFTPConnectionListener) init() error {
+	privateBytes, err := ioutil.ReadFile("/usr/keys/id_rsa")
+	if err != nil {
+		return err
+	}
+
+	private, err := ssh.ParsePrivateKey(privateBytes)
+	if err != nil {
+		return err
+	}
+	listener.config.AddHostKey(private)
+	return nil
 }
 
 func (listener *SFTPConnectionListener) handShake(connection net.Conn) (channels <-chan ssh.NewChannel, err error) {
@@ -111,7 +126,7 @@ type SFTPServer struct {
 	connections chan ConnectionRequest
 }
 
-func (server *SFTPServer) setupEventLoop() {
+func (server *SFTPServer) setupEventLoop() (err error) {
 	server.connections = make(chan ConnectionRequest, server.config.ListenerCount)
 
 	// make a load of connection listeners
@@ -131,6 +146,10 @@ func (server *SFTPServer) setupEventLoop() {
 		Handlers: sftp.InMemHandler(),
 	}
 
+	if err = listener.init(); err != nil {
+		return
+	}
+
 	for i := 0; i < int(server.config.ListenerCount); i++ {
 		// listen to the connections
 		go func(connRequests <-chan ConnectionRequest) {
@@ -143,6 +162,7 @@ func (server *SFTPServer) setupEventLoop() {
 			}
 		}(server.connections)
 	}
+	return
 }
 
 func (server *SFTPServer) ListenAndServe(addr string) (err error) {
