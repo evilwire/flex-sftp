@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/evilwire/flex-sftp"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	echo "github.com/labstack/echo"
 )
 
@@ -17,6 +19,7 @@ func NewApp() *App {
 const (
 	healthcheckEndpoint = "/health"
 	metaEndpoint = "/meta"
+	metricsEndpoint = "/metrics"
 )
 
 func (app *App) Setup() (err error) {
@@ -29,6 +32,8 @@ func (app *App) Setup() (err error) {
 			Status: "ok",
 		})
 	})
+
+	webServer.GET(metricsEndpoint, echo.WrapHandler(promhttp.Handler()))
 
 	sftpServer := flex.NewSFTPServer(flex.Config{ListenerCount: 5})
 	if err = sftpServer.SetupEventLoop(); err != nil {
