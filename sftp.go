@@ -1,4 +1,4 @@
-package main
+package flex
 
 import (
 	"fmt"
@@ -121,14 +121,19 @@ type ConnectionRequest struct {
 	Timestamp  time.Time
 }
 
+func NewSFTPServer(config Config) *SFTPServer {
+	return &SFTPServer{
+		config: config,
+		connections: make(chan ConnectionRequest, config.ListenerCount),
+	}
+}
+
 type SFTPServer struct {
 	config Config
 	connections chan ConnectionRequest
 }
 
-func (server *SFTPServer) setupEventLoop() (err error) {
-	server.connections = make(chan ConnectionRequest, server.config.ListenerCount)
-
+func (server *SFTPServer) SetupEventLoop() (err error) {
 	// make a load of connection listeners
 	listener := SFTPConnectionListener{
 		config: &ssh.ServerConfig{

@@ -11,7 +11,8 @@ ADD go.mod go.sum ./
 RUN go mod download
 
 ADD . ./
-RUN go get && \
+RUN cd example/in-memory && \
+    go get && \
     go build -o $GOPATH/bin/flex-sftp
 
 FROM alpine:3.10
