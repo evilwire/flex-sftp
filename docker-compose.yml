@@ -4,7 +4,9 @@ services:
   flex-sftp:
     image: evilwire/flex-sftp:latest
     ports:
-      - 2022:2022
+      - 2222:2222
+      - 8080:8080
+
     volumes:
       - ${PWD}/keys:/usr/keys
     command: ["-logtostderr"]

@@ -29,6 +29,6 @@ ENV BUILD_TIME $BUILD_TIME
 COPY --from=build /go/bin /bin
 
 VOLUME /usr/keys
-EXPOSE 2022
+EXPOSE 2222 8080
 
 ENTRYPOINT ["/bin/flex-sftp"]
